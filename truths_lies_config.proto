@@ -1,0 +1,40 @@
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package everchanging.truths_lies_generator;
+
+message ValueMap {
+    message Value {
+        oneof value {
+            google.protobuf.Any any_value = 1;
+            int64 int_value = 2;
+            double double_value = 3;
+            string string_value = 4;
+        };
+    };
+    map<string, Value> values = 1;
+};
+
+message TruthsLiesConfig {
+    // A string to define the template of the truth or lie; use { and } to
+    // indicate replacement strings. Example: "The time is {time}."
+    string template_string = 1;
+
+    // The name of the function whose role is to manipulate a given ValueMap so
+    // that the values in the map corresponds to a true statement. The function
+    // should accept a ValueMap* as argument (a random one will be passed in).
+    // If empty, the default is to do no manipulation.
+    string truths_generator = 2;
+
+    // The name of the function whose role is to manipulate a given ValueMap so
+    // that the values in the map corresponds to a false statement. The
+    // function should accept a ValueMap* as argument (a random one will be
+    // passed in). If empty, the default is to do no manipulation.
+    string lies_generator = 3;
+
+    // The list of key/value mappings for the input to the functions.
+    repeated ValueMap arguments = 4;
+};
+
