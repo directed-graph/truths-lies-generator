@@ -24,5 +24,9 @@ cc_library(
 cc_binary(
   name = "generator",
   srcs = ["truths_lies_generator_main.cc"],
-  deps = [":truths_lies_generator_lib"],
+  deps = [
+    ":truths_lies_generator_lib",
+    "@com_google_absl//absl/flags:flag",
+    "@com_google_absl//absl/flags:parse",
+  ],
 )

@@ -11,6 +11,10 @@ namespace truths_lies_generator {
 template<class... Args>
 std::string StringFormat(const std::string& format, const Args&... args);
 
+std::string ApplyValues(
+    const std::string& templateString,
+    const ValueMap& value_map);
+
 double GenRandomDouble(double lo, double hi);
 
 namespace cubing {
