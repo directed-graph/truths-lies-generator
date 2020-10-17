@@ -22,19 +22,10 @@ message TruthsLiesConfig {
     // indicate replacement strings. Example: "The time is {time}."
     string template_string = 1;
 
-    // The name of the function whose role is to manipulate a given ValueMap so
-    // that the values in the map corresponds to a true statement. The function
-    // should accept a ValueMap* as argument (a random one will be passed in).
-    // If empty, the default is to do no manipulation.
-    string truths_generator = 2;
-
-    // The name of the function whose role is to manipulate a given ValueMap so
-    // that the values in the map corresponds to a false statement. The
-    // function should accept a ValueMap* as argument (a random one will be
-    // passed in). If empty, the default is to do no manipulation.
-    string lies_generator = 3;
+    // The name of the class for this configuration.
+    string class_name = 2;
 
     // The list of key/value mappings for the input to the functions.
-    repeated ValueMap arguments = 4;
+    repeated ValueMap arguments = 3;
 };
 

@@ -22,34 +22,6 @@ std::string StringFormat(const std::string& format, const Args&... args) {
   return std::move(std::string(buffer.get(), buffer.get() + size - 1));
 };
 
-std::string DecodeValue(const ValueMap_Value& value) {
-  switch (value.value_case()) {
-    case ValueMap_Value::ValueCase::kAnyValue:
-      return "";
-    case ValueMap_Value::ValueCase::kIntValue:
-      return std::to_string(value.int_value());
-    case ValueMap_Value::ValueCase::kDoubleValue:
-      return std::to_string(value.double_value());
-    case ValueMap_Value::ValueCase::kStringValue:
-      return value.string_value();
-    default:
-      return "";
-  }
-};
-
-std::string ApplyValues(
-    const std::string& templateString,
-    const ValueMap& value_map) {
-  std::string string(templateString);
-  for (auto& [key, value] : value_map.values()) {
-    string.replace(
-        string.find("{" + key + "}"),
-        std::string("{" + key + "}").size(),
-        DecodeValue(value));
-  }
-  return string;
-};
-
 double GenRandomDouble(double lo, double hi) {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -57,28 +29,59 @@ double GenRandomDouble(double lo, double hi) {
   return dis(gen);
 };
 
-const std::string cubing::format =
-    "%.2f seconds rounded to the nearest hundredth of a second";
-
-void cubing::Truth(ValueMap* value_map) {
-  auto values = value_map->values();
-
-  (*value_map->mutable_values())["time"].set_string_value(
-      StringFormat<double>(cubing::format, values["time"].double_value()));
+std::string StatementGenerator::applyValues(const ValueMap& valueMap) {
+  std::string string(config->template_string());
+  std::string oneof_value;
+  for (auto& [key, value] : valueMap.values()) {
+    switch (value.value_case()) {
+      case ValueMap_Value::ValueCase::kAnyValue:
+        oneof_value = "";
+        break;
+      case ValueMap_Value::ValueCase::kIntValue:
+        oneof_value = std::to_string(value.int_value());
+        break;
+      case ValueMap_Value::ValueCase::kDoubleValue:
+        oneof_value = std::to_string(value.double_value());
+        break;
+      case ValueMap_Value::ValueCase::kStringValue:
+        oneof_value = value.string_value();
+        break;
+      default:
+        oneof_value = "";
+    }
+    string.replace(
+        string.find("{" + key + "}"),
+        std::string("{" + key + "}").size(),
+        oneof_value);
+  }
+  return string;
 };
 
-void cubing::Lie(ValueMap* value_map) {
-  auto values = value_map->values();
+std::string CubingStatementGenerator::truth(const ValueMap& valueMap_) {
+  auto values = valueMap_.values();
+  ValueMap valueMap(valueMap_);
 
-  (*value_map->mutable_values())["time"].set_string_value(
-      StringFormat<double>(cubing::format,
+  (*valueMap.mutable_values())["time"].set_string_value(
+      StringFormat<double>(format, values["time"].double_value()));
+
+  return applyValues(valueMap);
+};
+
+std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) {
+  auto values = valueMap_.values();
+  ValueMap valueMap(valueMap_);
+
+  (*valueMap.mutable_values())["time"].set_string_value(
+      StringFormat<double>(format,
           values["time"].double_value() + GenRandomDouble(-1, 1)));
+
+  return applyValues(valueMap);
 };
 
-std::map<std::string, std::function<void(ValueMap*)>> functionMap =
-{
-  { "everchanging::truths_lies_generator::cubing::Truth", cubing::Truth },
-  { "everchanging::truths_lies_generator::cubing::Lie", cubing::Lie },
+StatementGenerator* CreateStatementGenerator(TruthsLiesConfig* config) {
+  if (config->class_name() == "CubingStatementGenerator")
+      return new CubingStatementGenerator(config);
+  return nullptr;
 };
 
 };  // namespace truths_lies_generator
