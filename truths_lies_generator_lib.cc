@@ -78,9 +78,11 @@ std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) {
   return applyValues(valueMap);
 };
 
-StatementGenerator* CreateStatementGenerator(TruthsLiesConfig* config) {
+std::unique_ptr<StatementGenerator> CreateStatementGenerator(
+    TruthsLiesConfig* config) {
   if (config->class_name() == "CubingStatementGenerator")
-      return new CubingStatementGenerator(config);
+      return std::unique_ptr<StatementGenerator>(
+          new CubingStatementGenerator(config));
   return nullptr;
 };
 

@@ -49,7 +49,8 @@ private:
       "%.2f seconds rounded to the nearest hundredth of a second";
 };
 
-StatementGenerator* CreateStatementGenerator(TruthsLiesConfig* config);
+std::unique_ptr<StatementGenerator> CreateStatementGenerator(
+    TruthsLiesConfig* config);
 
 };  // namespace truths_lies_generator
 };  // namespace everchanging
