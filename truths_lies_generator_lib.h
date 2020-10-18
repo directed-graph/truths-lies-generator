@@ -19,7 +19,7 @@ double GenRandomDouble(double lo, double hi);
 
 class StatementGenerator {
 public:
-  StatementGenerator(TruthsLiesConfig&& config)
+  StatementGenerator(TruthsLiesConfig config)
     : config(std::move(config)) {};
   ~StatementGenerator() {};
   virtual std::string truth(const ValueMap& valueMap) {
@@ -39,7 +39,7 @@ protected:
 
 class CubingStatementGenerator : public StatementGenerator {
 public:
-  CubingStatementGenerator(TruthsLiesConfig&& config)
+  CubingStatementGenerator(TruthsLiesConfig config)
     : StatementGenerator(std::move(config)) {};
   std::string truth(const ValueMap& valueMap) override;
   std::string lie(const ValueMap& valueMap) override;
@@ -49,7 +49,7 @@ private:
 };
 
 std::unique_ptr<StatementGenerator> CreateStatementGenerator(
-    TruthsLiesConfig&& config);
+    TruthsLiesConfig config);
 
 };  // namespace truths_lies_generator
 };  // namespace everchanging

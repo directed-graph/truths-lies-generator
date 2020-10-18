@@ -79,7 +79,7 @@ std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) {
 };
 
 std::unique_ptr<StatementGenerator> CreateStatementGenerator(
-    TruthsLiesConfig&& config) {
+    TruthsLiesConfig config) {
   if (config.class_name() == "CubingStatementGenerator")
       return std::unique_ptr<StatementGenerator>(
           new CubingStatementGenerator(std::move(config)));
