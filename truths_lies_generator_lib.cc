@@ -30,7 +30,7 @@ double GenRandomDouble(double lo, double hi) {
 };
 
 std::string StatementGenerator::applyValues(const ValueMap& valueMap) {
-  std::string string(config->template_string());
+  std::string string(config.template_string());
   std::string oneof_value;
   for (auto& [key, value] : valueMap.values()) {
     switch (value.value_case()) {
@@ -79,10 +79,10 @@ std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) {
 };
 
 std::unique_ptr<StatementGenerator> CreateStatementGenerator(
-    TruthsLiesConfig* config) {
-  if (config->class_name() == "CubingStatementGenerator")
+    TruthsLiesConfig&& config) {
+  if (config.class_name() == "CubingStatementGenerator")
       return std::unique_ptr<StatementGenerator>(
-          new CubingStatementGenerator(config));
+          new CubingStatementGenerator(std::move(config)));
   return nullptr;
 };
 

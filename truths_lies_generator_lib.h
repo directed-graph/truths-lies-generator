@@ -19,29 +19,28 @@ double GenRandomDouble(double lo, double hi);
 
 class StatementGenerator {
 public:
-  // constructor will transfer ownership of config to object
-  StatementGenerator(TruthsLiesConfig* config)
-    : config(config) {};
+  StatementGenerator(TruthsLiesConfig&& config)
+    : config(std::move(config)) {};
   ~StatementGenerator() {};
   virtual std::string truth(const ValueMap& valueMap) {
     return applyValues(valueMap);
   };
   virtual std::string truth(int index) {
-    return truth(config->arguments()[index]);
+    return truth(config.arguments()[index]);
   };
   virtual std::string lie(const ValueMap& valueMap) = 0;
   virtual std::string lie(int index) {
-    return lie(config->arguments()[index]);
+    return lie(config.arguments()[index]);
   };
   std::string applyValues(const ValueMap& valueMap);
 protected:
-  std::unique_ptr<TruthsLiesConfig> config;
+  TruthsLiesConfig config;
 };
 
 class CubingStatementGenerator : public StatementGenerator {
 public:
-  CubingStatementGenerator(TruthsLiesConfig* config)
-    : StatementGenerator(config) {};
+  CubingStatementGenerator(TruthsLiesConfig&& config)
+    : StatementGenerator(std::move(config)) {};
   std::string truth(const ValueMap& valueMap) override;
   std::string lie(const ValueMap& valueMap) override;
 private:
@@ -50,7 +49,7 @@ private:
 };
 
 std::unique_ptr<StatementGenerator> CreateStatementGenerator(
-    TruthsLiesConfig* config);
+    TruthsLiesConfig&& config);
 
 };  // namespace truths_lies_generator
 };  // namespace everchanging
