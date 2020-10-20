@@ -22,12 +22,14 @@ public:
   StatementGenerator(TruthsLiesConfig config)
     : config(std::move(config)) {};
   ~StatementGenerator() {};
+  // truths generator should be deterministic
   virtual std::string truth(const ValueMap& valueMap) {
     return applyValues(valueMap);
   };
   virtual std::string truth(int index) {
     return truth(config.arguments()[index]);
   };
+  // lies generator can be non-deterministic
   virtual std::string lie(const ValueMap& valueMap) = 0;
   virtual std::string lie(int index) {
     return lie(config.arguments()[index]);
