@@ -14,6 +14,10 @@
 #include "truths_lies_config.pb.h"
 #include "truths_lies_generator_lib.h"
 
+ABSL_FLAG(bool, ensure_not_true, true,
+          "ensure that generated lies statements are not true; "
+          "implementation-wise, this involves brute-force computing "
+          "all truths statements once");
 ABSL_FLAG(int, lies, 0, "number of lie statements");
 ABSL_FLAG(int, truths, 0, "number of truth statements");
 ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
@@ -28,6 +32,7 @@ int main(int argc, char** argv) {
   std::vector<int> generatorWeights;
   std::vector<std::unique_ptr<StatementGenerator>> statementGenerators;
   std::vector<std::string> statements;
+  std::vector<std::set<std::string>> allTruthsPerGenerator;
 
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
     TruthsLiesConfig config;
@@ -45,6 +50,14 @@ int main(int argc, char** argv) {
     generatorWeights.push_back(config.arguments().size());
     statementGenerators.push_back(
         CreateStatementGenerator(std::move(config)));
+
+    std::set<std::string> allTruths;
+    if (absl::GetFlag(FLAGS_ensure_not_true)) {
+      for (int i = 0; i < generatorWeights.back(); ++i) {
+        allTruths.insert(std::move(statementGenerators.back()->truth(i)));
+      }
+    }
+    allTruthsPerGenerator.push_back(std::move(allTruths));
   }
 
   std::random_device rd;
@@ -67,8 +80,11 @@ int main(int argc, char** argv) {
     // generatorWeights represent the size of each valueMap vector
     int valueMapIndex = static_cast<int>(
         generatorWeights[generatorIndex] * ud(gen));
-    statements.push_back(
-        statementGenerators[generatorIndex]->lie(valueMapIndex));
+    std::string lie;
+    do {
+      lie = statementGenerators[generatorIndex]->lie(valueMapIndex);
+    } while (allTruthsPerGenerator[generatorIndex].count(lie) > 0);
+    statements.push_back(std::move(lie));
   }
 
   for (auto statement : statements) {
