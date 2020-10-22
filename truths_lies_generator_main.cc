@@ -26,12 +26,17 @@ namespace {
 using namespace everchanging::truths_lies_generator;
 };
 
+typedef struct Statement {
+  std::string statement;
+  bool truth;
+} Statement;
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
   std::vector<int> generatorWeights;
   std::vector<std::unique_ptr<StatementGenerator>> statementGenerators;
-  std::vector<std::string> statements;
+  std::vector<Statement> statements;
   std::vector<std::set<std::string>> allTruthsPerGenerator;
 
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
@@ -71,8 +76,14 @@ int main(int argc, char** argv) {
     // generatorWeights represent the size of each valueMap vector
     int valueMapIndex = static_cast<int>(
         generatorWeights[generatorIndex] * ud(gen));
-    statements.push_back(
-        statementGenerators[generatorIndex]->truth(valueMapIndex));
+    Statement s = {
+      // if ensure not true, we already have all the statements; but because we
+      // have them as a set, access will be O(n); as such it's a bit more
+      // efficient to just compute the truth statement again
+      .statement = statementGenerators[generatorIndex]->truth(valueMapIndex),
+      .truth = true,
+    };
+    statements.push_back(std::move(s));
   }
 
   for (int i = 0; i < absl::GetFlag(FLAGS_lies); ++i) {
@@ -81,14 +92,17 @@ int main(int argc, char** argv) {
     int valueMapIndex = static_cast<int>(
         generatorWeights[generatorIndex] * ud(gen));
     std::string lie;
+    Statement s = {
+      .truth = false,
+    };
     do {
-      lie = statementGenerators[generatorIndex]->lie(valueMapIndex);
-    } while (allTruthsPerGenerator[generatorIndex].count(lie) > 0);
-    statements.push_back(std::move(lie));
+      s.statement = statementGenerators[generatorIndex]->lie(valueMapIndex);
+    } while (allTruthsPerGenerator[generatorIndex].count(s.statement) > 0);
+    statements.push_back(std::move(s));
   }
 
-  for (auto statement : statements) {
-    std::cout << statement << std::endl;
+  for (auto s : statements) {
+    std::cout << s.truth << ": " << s.statement << std::endl;
   }
 
   //std::string output;
