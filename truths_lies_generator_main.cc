@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <fstream>
 #include <random>
 #include <set>
@@ -18,6 +19,9 @@ ABSL_FLAG(bool, ensure_not_true, true,
           "ensure that generated lies statements are not true; "
           "implementation-wise, this involves brute-force computing "
           "all truths statements once");
+ABSL_FLAG(bool, random_order, false,
+          "if set, randomize output order; "
+          "if not set, output is sorted lexically");
 ABSL_FLAG(int, lies, 0, "number of lie statements");
 ABSL_FLAG(int, truths, 0, "number of truth statements");
 ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
@@ -101,6 +105,15 @@ int main(int argc, char** argv) {
     statements.push_back(std::move(s));
   }
 
+  if (absl::GetFlag(FLAGS_random_order)) {
+    std::shuffle(statements.begin(), statements.end(), gen);
+  } else {
+    std::sort(
+        statements.begin(), statements.end(),
+        [](const Statement& ls, const Statement& rs) -> bool {
+          return ls.statement < rs.statement;
+        });
+  }
   for (auto s : statements) {
     std::cout << s.truth << ": " << s.statement << std::endl;
   }
