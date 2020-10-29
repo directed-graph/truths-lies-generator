@@ -31,7 +31,7 @@ using namespace everchanging::truths_lies_generator;
 };
 
 typedef struct Statement {
-  std::string statement;
+  std::shared_ptr<std::string> statement;
   bool truth;
 } Statement;
 
@@ -40,8 +40,9 @@ int main(int argc, char** argv) {
 
   std::vector<int> generatorWeights;
   std::vector<std::unique_ptr<StatementGenerator>> statementGenerators;
-  std::vector<Statement> statements;
   std::vector<std::set<std::string>> allTruthsPerGenerator;
+
+  std::vector<Statement> statements;
 
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
     TruthsLiesConfig config;
@@ -84,7 +85,8 @@ int main(int argc, char** argv) {
       // if ensure not true, we already have all the statements; but because we
       // have them as a set, access will be O(n); as such it's a bit more
       // efficient to just compute the truth statement again
-      .statement = statementGenerators[generatorIndex]->truth(valueMapIndex),
+      .statement = std::make_shared<std::string>(
+          statementGenerators[generatorIndex]->truth(valueMapIndex)),
       .truth = true,
     };
     statements.push_back(std::move(s));
@@ -100,8 +102,9 @@ int main(int argc, char** argv) {
       .truth = false,
     };
     do {
-      s.statement = statementGenerators[generatorIndex]->lie(valueMapIndex);
-    } while (allTruthsPerGenerator[generatorIndex].count(s.statement) > 0);
+      s.statement = std::make_shared<std::string>(
+          statementGenerators[generatorIndex]->lie(valueMapIndex));
+    } while (allTruthsPerGenerator[generatorIndex].count(*s.statement) > 0);
     statements.push_back(std::move(s));
   }
 
@@ -115,7 +118,7 @@ int main(int argc, char** argv) {
         });
   }
   for (auto s : statements) {
-    std::cout << s.truth << ": " << s.statement << std::endl;
+    std::cout << s.truth << ": " << *s.statement << std::endl;
   }
 
   //std::string output;
