@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   std::vector<std::unique_ptr<StatementGenerator>> statementGenerators;
   std::vector<std::set<std::string>> allTruthsPerGenerator;
 
-  std::vector<Statement> statements;
+  std::vector<std::shared_ptr<Statement>> statementsVector;
 
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
     TruthsLiesConfig config;
@@ -81,15 +81,15 @@ int main(int argc, char** argv) {
     // generatorWeights represent the size of each valueMap vector
     int valueMapIndex = static_cast<int>(
         generatorWeights[generatorIndex] * ud(gen));
-    Statement s = {
+    std::shared_ptr<Statement> s = std::make_shared<Statement>(Statement {
       // if ensure not true, we already have all the statements; but because we
       // have them as a set, access will be O(n); as such it's a bit more
       // efficient to just compute the truth statement again
       .statement = std::make_shared<std::string>(
           statementGenerators[generatorIndex]->truth(valueMapIndex)),
       .truth = true,
-    };
-    statements.push_back(std::move(s));
+    });
+    statementsVector.push_back(s);
   }
 
   for (int i = 0; i < absl::GetFlag(FLAGS_lies); ++i) {
@@ -98,27 +98,28 @@ int main(int argc, char** argv) {
     int valueMapIndex = static_cast<int>(
         generatorWeights[generatorIndex] * ud(gen));
     std::string lie;
-    Statement s = {
+    std::shared_ptr<Statement> s = std::make_shared<Statement>(Statement {
       .truth = false,
-    };
+    });
     do {
-      s.statement = std::make_shared<std::string>(
+      s->statement = std::make_shared<std::string>(
           statementGenerators[generatorIndex]->lie(valueMapIndex));
-    } while (allTruthsPerGenerator[generatorIndex].count(*s.statement) > 0);
-    statements.push_back(std::move(s));
+    } while (allTruthsPerGenerator[generatorIndex].count(*(s->statement)) > 0);
+    statementsVector.push_back(s);
   }
 
   if (absl::GetFlag(FLAGS_random_order)) {
-    std::shuffle(statements.begin(), statements.end(), gen);
+    std::shuffle(statementsVector.begin(), statementsVector.end(), gen);
   } else {
     std::sort(
-        statements.begin(), statements.end(),
-        [](const Statement& ls, const Statement& rs) -> bool {
-          return ls.statement < rs.statement;
+        statementsVector.begin(), statementsVector.end(),
+        [](const std::shared_ptr<Statement>& lhs,
+           const std::shared_ptr<Statement>& rhs) -> bool {
+          return *(lhs->statement) < *(rhs->statement);
         });
   }
-  for (auto s : statements) {
-    std::cout << s.truth << ": " << *s.statement << std::endl;
+  for (auto s : statementsVector) {
+    std::cout << s->truth << ": " << *(s->statement) << std::endl;
   }
 
   //std::string output;
