@@ -5,6 +5,11 @@ import "google/protobuf/any.proto";
 
 package everchanging.truths_lies_generator;
 
+message Statement {
+    string statement = 1;
+    bool truth = 2;
+};
+
 message ValueMap {
     message Value {
         oneof value {

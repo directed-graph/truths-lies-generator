@@ -23,24 +23,19 @@ ABSL_FLAG(bool, random_order, false,
           "if set, randomize output order; "
           "if not set, output is sorted lexically");
 ABSL_FLAG(int, lies, 0, "number of lie statements");
-ABSL_FLAG(int, truths, 0, "number of truth statements");
 ABSL_FLAG(int, max_retries, 10,
           "number of times to retry if we generate identical statements");
+ABSL_FLAG(int, truths, 0, "number of truth statements");
 ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
 
 namespace {
 using namespace everchanging::truths_lies_generator;
 };
 
-typedef struct Statement {
-  std::string statement;
-  bool truth;
-} Statement;
-
 struct SharedStatementCmp {
   bool operator()(const std::shared_ptr<Statement>& lhs,
                   const std::shared_ptr<Statement>& rhs) const {
-    return lhs->statement < rhs->statement;
+    return lhs->statement() < rhs->statement();
   }
 };
 
@@ -83,10 +78,9 @@ int main(int argc, char** argv) {
     std::vector<std::shared_ptr<Statement>> truthsVector;
     if (absl::GetFlag(FLAGS_ensure_not_true)) {
       for (int i = 0; i < generatorWeights.back(); ++i) {
-        std::shared_ptr<Statement> s = std::make_shared<Statement>(Statement {
-          .statement = statementGenerators.back()->truth(i),
-          .truth = true,
-        });
+        std::shared_ptr<Statement> s = std::make_shared<Statement>();
+        s->set_statement(statementGenerators.back()->truth(i));
+        s->set_truth(true);
         truthsSet.insert(s);
         truthsVector.push_back(s);
       }
@@ -113,14 +107,16 @@ int main(int argc, char** argv) {
       if (absl::GetFlag(FLAGS_ensure_not_true)) {
         s = truthsVectorPerGenerator[generatorIndex][valueMapIndex];
       } else {
-        s = std::make_shared<Statement>(Statement {
-          .statement = statementGenerators[generatorIndex]->truth(valueMapIndex),
-          .truth = true,
-        });
+        s = std::make_shared<Statement>();
+        s->set_statement(
+            statementGenerators[generatorIndex]->truth(valueMapIndex));
+        s->set_truth(true);
       }
     } while (statementsSet.count(s) > 0 && retries_left-- > 0);
     if (retries_left <= 0) {
-      std::cerr << "ERROR: generated too many duplicate statements" << std::endl;
+      std::cerr
+          << "ERROR: generated too many duplicate statements"
+          << std::endl;
       return EXIT_FAILURE;
     }
     statementsSet.insert(s);
@@ -129,21 +125,22 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < absl::GetFlag(FLAGS_lies); ++i) {
     int generatorIndex;
-    std::shared_ptr<Statement> s = std::make_shared<Statement>(Statement {
-      .truth = false,
-    });
+    std::shared_ptr<Statement> s = std::make_shared<Statement>();
+    s->set_truth(false);
     int retries_left = absl::GetFlag(FLAGS_max_retries);
     do {
       generatorIndex = dd(gen);
       // generatorWeights represent the size of each valueMap vector
       int valueMapIndex = static_cast<int>(
           generatorWeights[generatorIndex] * ud(gen));
-      s->statement = statementGenerators[generatorIndex]->lie(valueMapIndex);
+      s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
     } while (
         truthsSetPerGenerator[generatorIndex].count(s) > 0 &&
         statementsSet.count(s) > 0 && retries_left-- > 0);
     if (retries_left <= 0) {
-      std::cerr << "ERROR: generated too many duplicate statements" << std::endl;
+      std::cerr
+          << "ERROR: generated too many duplicate statements"
+          << std::endl;
       return EXIT_FAILURE;
     }
     statementsSet.insert(s);
@@ -157,11 +154,11 @@ int main(int argc, char** argv) {
         statementsVector.begin(), statementsVector.end(),
         [](const std::shared_ptr<Statement>& lhs,
            const std::shared_ptr<Statement>& rhs) -> bool {
-          return lhs->statement < rhs->statement;
+          return lhs->statement() < rhs->statement();
         });
   }
   for (auto s : statementsVector) {
-    std::cout << s->truth << ": " << s->statement << std::endl;
+    std::cout << s->truth() << ": " << s->statement() << std::endl;
   }
 
   //std::string output;
