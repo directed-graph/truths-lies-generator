@@ -5,6 +5,27 @@ import "google/protobuf/any.proto";
 
 package everchanging.truths_lies_generator;
 
+service TruthsLiesGeneratorService {
+    rpc Generate(GenerateRequest) returns (GenerateResponse);
+    rpc GeneratePartitioned(GenerateRequest)
+        returns (GeneratePartitionedResponse);
+};
+
+message GenerateRequest {
+    TruthsLiesConfig config = 1;
+    int64 truths_count = 2;
+    int64 lies_count = 3;
+};
+
+message GenerateResponse {
+    repeated Statement statements = 1;
+};
+
+message GeneratePartitionedResponse {
+    repeated Statement truths = 1;
+    repeated Statement lies = 2;
+};
+
 message Statement {
     string statement = 1;
     bool truth = 2;
