@@ -18,7 +18,11 @@ cc_library(
   name = "truths_lies_generator_lib",
   srcs = ["truths_lies_generator_lib.cc"],
   hdrs = ["truths_lies_generator_lib.h"],
-  deps = [":truths_lies_config_cc_proto"],
+  deps = [
+    ":truths_lies_config_cc_proto",
+    "@com_google_absl//absl/status:status",
+    "@com_google_absl//absl/strings:strings",
+  ],
 )
 
 cc_binary(

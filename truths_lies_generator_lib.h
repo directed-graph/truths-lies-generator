@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/status.h"
 #include "truths_lies_config.pb.h"
 
 namespace everchanging {
@@ -52,6 +53,22 @@ private:
 
 std::unique_ptr<StatementGenerator> CreateStatementGenerator(
     TruthsLiesConfig config);
+
+class StatementCollection {
+public:
+  std::shared_ptr<Statement> operator[](size_t index);
+  absl::Status insert(std::shared_ptr<Statement> s);
+  int count(std::shared_ptr<Statement> s);
+private:
+  struct SharedStatementCmp {
+    bool operator()(const std::shared_ptr<Statement>& lhs,
+                    const std::shared_ptr<Statement>& rhs) const {
+      return lhs->statement() < rhs->statement();
+    }
+  };
+  std::set<std::shared_ptr<Statement>, SharedStatementCmp> statementSet;
+  std::vector<std::shared_ptr<Statement>> statementVector;
+};
 
 };  // namespace truths_lies_generator
 };  // namespace everchanging

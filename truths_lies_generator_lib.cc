@@ -6,6 +6,7 @@
 #include <google/protobuf/any.h>
 #include <google/protobuf/wrappers.pb.h>
 
+#include "absl/strings/str_cat.h"
 #include "truths_lies_config.pb.h"
 #include "truths_lies_generator_lib.h"
 
@@ -84,6 +85,25 @@ std::unique_ptr<StatementGenerator> CreateStatementGenerator(
       return std::unique_ptr<StatementGenerator>(
           new CubingStatementGenerator(std::move(config)));
   return nullptr;
+};
+
+std::shared_ptr<Statement> StatementCollection::operator[](size_t index) {
+  if (index < statementVector.size())
+    return statementVector[index];
+  return nullptr;
+};
+
+absl::Status StatementCollection::insert(std::shared_ptr<Statement> s) {
+  if (count(s) > 0)
+    return absl::AlreadyExistsError(
+        absl::StrCat("statement already in the collection: ", s->statement()));
+  statementSet.insert(s);
+  statementVector.push_back(s);
+  return absl::OkStatus();
+};
+
+int StatementCollection::count(std::shared_ptr<Statement> statement) {
+  return statementSet.count(statement);
 };
 
 };  // namespace truths_lies_generator
