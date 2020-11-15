@@ -30,7 +30,7 @@ double GenRandomDouble(double lo, double hi) {
   return dis(gen);
 };
 
-std::string StatementGenerator::applyValues(const ValueMap& valueMap) {
+std::string StatementGenerator::applyValues(const ValueMap& valueMap) const {
   std::string string(config.template_string());
   std::string oneof_value;
   for (auto& [key, value] : valueMap.values()) {
@@ -58,7 +58,8 @@ std::string StatementGenerator::applyValues(const ValueMap& valueMap) {
   return string;
 };
 
-std::string CubingStatementGenerator::truth(const ValueMap& valueMap_) {
+
+std::string CubingStatementGenerator::truth(const ValueMap& valueMap_) const {
   auto values = valueMap_.values();
   ValueMap valueMap(valueMap_);
 
@@ -68,7 +69,7 @@ std::string CubingStatementGenerator::truth(const ValueMap& valueMap_) {
   return applyValues(valueMap);
 };
 
-std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) {
+std::string CubingStatementGenerator::lie(const ValueMap& valueMap_) const {
   auto values = valueMap_.values();
   ValueMap valueMap(valueMap_);
 
@@ -87,7 +88,7 @@ std::unique_ptr<StatementGenerator> CreateStatementGenerator(
   return nullptr;
 };
 
-std::shared_ptr<Statement> StatementCollection::operator[](size_t index) {
+std::shared_ptr<Statement> StatementCollection::operator[](size_t index) const {
   if (index < statementVector.size())
     return statementVector[index];
   return nullptr;
@@ -102,7 +103,7 @@ absl::Status StatementCollection::insert(std::shared_ptr<Statement> s) {
   return absl::OkStatus();
 };
 
-int StatementCollection::count(std::shared_ptr<Statement> statement) {
+int StatementCollection::count(std::shared_ptr<Statement> statement) const {
   return statementSet.count(statement);
 };
 

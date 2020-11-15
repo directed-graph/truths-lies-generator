@@ -24,18 +24,18 @@ public:
     : config(std::move(config)) {};
   ~StatementGenerator() {};
   // truths generator should be deterministic
-  virtual std::string truth(const ValueMap& valueMap) {
+  virtual std::string truth(const ValueMap& valueMap) const {
     return applyValues(valueMap);
   };
-  virtual std::string truth(int index) {
+  virtual std::string truth(int index) const {
     return truth(config.arguments()[index]);
   };
   // lies generator can be non-deterministic
-  virtual std::string lie(const ValueMap& valueMap) = 0;
-  virtual std::string lie(int index) {
+  virtual std::string lie(const ValueMap& valueMap) const = 0;
+  virtual std::string lie(int index) const {
     return lie(config.arguments()[index]);
   };
-  std::string applyValues(const ValueMap& valueMap);
+  std::string applyValues(const ValueMap& valueMap) const;
 protected:
   TruthsLiesConfig config;
 };
@@ -44,8 +44,8 @@ class CubingStatementGenerator : public StatementGenerator {
 public:
   CubingStatementGenerator(TruthsLiesConfig config)
     : StatementGenerator(std::move(config)) {};
-  std::string truth(const ValueMap& valueMap) override;
-  std::string lie(const ValueMap& valueMap) override;
+  std::string truth(const ValueMap& valueMap) const override;
+  std::string lie(const ValueMap& valueMap) const override;
 private:
   const std::string format =
       "%.2f seconds rounded to the nearest hundredth of a second";
@@ -56,9 +56,9 @@ std::unique_ptr<StatementGenerator> CreateStatementGenerator(
 
 class StatementCollection {
 public:
-  std::shared_ptr<Statement> operator[](size_t index);
+  std::shared_ptr<Statement> operator[](size_t index) const;
   absl::Status insert(std::shared_ptr<Statement> s);
-  int count(std::shared_ptr<Statement> s);
+  int count(std::shared_ptr<Statement> s) const;
 private:
   struct SharedStatementCmp {
     bool operator()(const std::shared_ptr<Statement>& lhs,
