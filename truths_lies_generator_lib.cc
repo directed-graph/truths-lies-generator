@@ -105,6 +105,11 @@ absl::Status StatementCollection::insert(std::shared_ptr<Statement> s) {
   return absl::OkStatus();
 };
 
+absl::Status StatementCollection::sort() {
+  std::sort(begin(), end(), SharedStatementCmp());
+  return absl::OkStatus();
+};
+
 int StatementCollection::count(std::shared_ptr<Statement> statement) const {
   return statementSet.count(statement);
 };

@@ -60,6 +60,7 @@ class StatementCollection {
 public:
   std::shared_ptr<Statement> operator[](size_t index) const;
   absl::Status insert(std::shared_ptr<Statement> s);
+  absl::Status sort();
   int count(std::shared_ptr<Statement> s) const;
   auto begin() { return statementVector.begin(); };
   auto begin() const { return statementVector.begin(); };
