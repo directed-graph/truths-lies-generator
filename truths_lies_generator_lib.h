@@ -53,7 +53,7 @@ private:
       "%.2f seconds rounded to the nearest hundredth of a second";
 };
 
-std::unique_ptr<StatementGenerator> CreateStatementGenerator(
+std::shared_ptr<StatementGenerator> CreateStatementGenerator(
     TruthsLiesConfig config);
 
 class StatementCollection {

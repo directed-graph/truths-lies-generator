@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
   std::vector<int> generatorWeights;
-  std::vector<std::unique_ptr<StatementGenerator>> statementGenerators;
+  std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
 
   // each element in vector is a set corresponding to a generator; each element
   // in the set corresponds to a truths; the purpose is for fast searching
