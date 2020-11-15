@@ -32,5 +32,6 @@ cc_binary(
     ":truths_lies_generator_lib",
     "@com_google_absl//absl/flags:flag",
     "@com_google_absl//absl/flags:parse",
+    "@com_google_absl//absl/status:status",
   ],
 )

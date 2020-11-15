@@ -3,6 +3,7 @@
 #define _EVERCHANGING_TRUTHS_LIES_GENERATOR_LIB_H_
 
 #include <functional>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <string>
@@ -60,6 +61,10 @@ public:
   std::shared_ptr<Statement> operator[](size_t index) const;
   absl::Status insert(std::shared_ptr<Statement> s);
   int count(std::shared_ptr<Statement> s) const;
+  auto begin() { return statementVector.begin(); };
+  auto begin() const { return statementVector.begin(); };
+  auto end() { return statementVector.end(); };
+  auto end() const { return statementVector.end(); };
 private:
   struct SharedStatementCmp {
     bool operator()(const std::shared_ptr<Statement>& lhs,
