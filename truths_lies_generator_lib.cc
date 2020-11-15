@@ -58,6 +58,9 @@ std::string StatementGenerator::applyValues(const ValueMap& valueMap) const {
   return string;
 };
 
+size_t StatementGenerator::size() const {
+  return config.arguments().size();
+};
 
 std::string CubingStatementGenerator::truth(const ValueMap& valueMap_) const {
   auto values = valueMap_.values();

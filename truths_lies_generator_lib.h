@@ -36,6 +36,7 @@ public:
     return lie(config.arguments()[index]);
   };
   std::string applyValues(const ValueMap& valueMap) const;
+  size_t size() const;
 protected:
   TruthsLiesConfig config;
 };
