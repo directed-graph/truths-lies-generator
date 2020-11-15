@@ -12,6 +12,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/status/status.h"
 #include "truths_lies_config.pb.h"
 #include "truths_lies_generator_lib.h"
 
@@ -39,20 +40,25 @@ struct SharedStatementCmp {
   }
 };
 
+std::shared_ptr<StatementCollection> GenerateAllTruths(
+    std::shared_ptr<const StatementGenerator> g) {
+  std::shared_ptr<StatementCollection> collection =
+      std::make_shared<StatementCollection>();
+  for (size_t i = 0; i < g->size(); ++i) {
+    std::shared_ptr<Statement> s = std::make_shared<Statement>();
+    s->set_statement(g->truth(i));
+    s->set_truth(true);
+    absl::Status status = collection->insert(s);
+  }
+  return collection;
+}
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
   std::vector<int> generatorWeights;
   std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
-
-  // each element in vector is a set corresponding to a generator; each element
-  // in the set corresponds to a truths; the purpose is for fast searching
-  std::vector<std::set<std::shared_ptr<Statement>,
-                       SharedStatementCmp>> truthsSetPerGenerator;
-  // each element in vector is a vector corresponding to a generator; each
-  // element in _that_ vector corresponds to a truths corresponding to the
-  // index number of the argument; the purpose is indexed access to keep order
-  std::vector<std::vector<std::shared_ptr<Statement>>> truthsVectorPerGenerator;
+  std::vector<std::shared_ptr<StatementCollection>> truthsPerGenerator;
 
   std::vector<std::shared_ptr<Statement>> statementsVector;
   std::set<std::shared_ptr<Statement>, SharedStatementCmp> statementsSet;
@@ -74,19 +80,8 @@ int main(int argc, char** argv) {
     statementGenerators.push_back(
         CreateStatementGenerator(std::move(config)));
 
-    std::set<std::shared_ptr<Statement>, SharedStatementCmp> truthsSet;
-    std::vector<std::shared_ptr<Statement>> truthsVector;
-    if (absl::GetFlag(FLAGS_ensure_not_true)) {
-      for (int i = 0; i < generatorWeights.back(); ++i) {
-        std::shared_ptr<Statement> s = std::make_shared<Statement>();
-        s->set_statement(statementGenerators.back()->truth(i));
-        s->set_truth(true);
-        truthsSet.insert(s);
-        truthsVector.push_back(s);
-      }
-    }
-    truthsSetPerGenerator.push_back(std::move(truthsSet));
-    truthsVectorPerGenerator.push_back(std::move(truthsVector));
+    truthsPerGenerator.push_back(
+        GenerateAllTruths(statementGenerators.back()));
   }
 
   std::random_device rd;
@@ -105,7 +100,7 @@ int main(int argc, char** argv) {
           generatorWeights[generatorIndex] * ud(gen));
       // if ensure_not_true, we already have the statements generatored
       if (absl::GetFlag(FLAGS_ensure_not_true)) {
-        s = truthsVectorPerGenerator[generatorIndex][valueMapIndex];
+        s = (*truthsPerGenerator[generatorIndex])[valueMapIndex];
       } else {
         s = std::make_shared<Statement>();
         s->set_statement(
@@ -135,7 +130,7 @@ int main(int argc, char** argv) {
           generatorWeights[generatorIndex] * ud(gen));
       s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
     } while (
-        truthsSetPerGenerator[generatorIndex].count(s) > 0 &&
+        truthsPerGenerator[generatorIndex]->count(s) > 0 &&
         statementsSet.count(s) > 0 && retries_left-- > 0);
     if (retries_left <= 0) {
       std::cerr
