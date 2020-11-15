@@ -60,8 +60,7 @@ int main(int argc, char** argv) {
   std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
   std::vector<std::shared_ptr<StatementCollection>> truthsPerGenerator;
 
-  std::vector<std::shared_ptr<Statement>> statementsVector;
-  std::set<std::shared_ptr<Statement>, SharedStatementCmp> statementsSet;
+  StatementCollection statements;
 
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
     TruthsLiesConfig config;
@@ -107,15 +106,14 @@ int main(int argc, char** argv) {
             statementGenerators[generatorIndex]->truth(valueMapIndex));
         s->set_truth(true);
       }
-    } while (statementsSet.count(s) > 0 && retries_left-- > 0);
+    } while (statements.count(s) > 0 && retries_left-- > 0);
     if (retries_left <= 0) {
       std::cerr
           << "ERROR: generated too many duplicate statements"
           << std::endl;
       return EXIT_FAILURE;
     }
-    statementsSet.insert(s);
-    statementsVector.push_back(s);
+    absl::Status status = statements.insert(s);
   }
 
   for (int i = 0; i < absl::GetFlag(FLAGS_lies); ++i) {
@@ -131,28 +129,22 @@ int main(int argc, char** argv) {
       s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
     } while (
         truthsPerGenerator[generatorIndex]->count(s) > 0 &&
-        statementsSet.count(s) > 0 && retries_left-- > 0);
+        statements.count(s) > 0 && retries_left-- > 0);
     if (retries_left <= 0) {
       std::cerr
           << "ERROR: generated too many duplicate statements"
           << std::endl;
       return EXIT_FAILURE;
     }
-    statementsSet.insert(s);
-    statementsVector.push_back(s);
+    absl::Status status = statements.insert(s);
   }
 
   if (absl::GetFlag(FLAGS_random_order)) {
-    std::shuffle(statementsVector.begin(), statementsVector.end(), gen);
+    std::shuffle(statements.begin(), statements.end(), gen);
   } else {
-    std::sort(
-        statementsVector.begin(), statementsVector.end(),
-        [](const std::shared_ptr<Statement>& lhs,
-           const std::shared_ptr<Statement>& rhs) -> bool {
-          return lhs->statement() < rhs->statement();
-        });
+    absl::Status status = statements.sort();
   }
-  for (auto s : statementsVector) {
+  for (auto s : statements) {
     std::cout << s->truth() << ": " << s->statement() << std::endl;
   }
 
