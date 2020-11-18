@@ -73,7 +73,9 @@ private:
       return lhs->statement() < rhs->statement();
     }
   };
+  std::set<std::shared_ptr<Statement>, SharedStatementCmp> liesSet;
   std::set<std::shared_ptr<Statement>, SharedStatementCmp> statementSet;
+  std::set<std::shared_ptr<Statement>, SharedStatementCmp> truthsSet;
   std::vector<std::shared_ptr<Statement>> statementVector;
 };
 

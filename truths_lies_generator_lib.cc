@@ -102,6 +102,11 @@ absl::Status StatementCollection::insert(std::shared_ptr<Statement> s) {
         absl::StrCat("statement already in the collection: ", s->statement()));
   statementSet.insert(s);
   statementVector.push_back(s);
+  if (s->truth()) {
+    truthsSet.insert(s);
+  } else {
+    liesSet.insert(s);
+  }
   return absl::OkStatus();
 };
 
