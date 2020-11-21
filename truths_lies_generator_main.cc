@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
   } else {
     absl::Status status = statements.sort();
   }
-  for (auto s : statements) {
+  for (auto const& s : statements) {
     std::cout << s->truth() << ": " << s->statement() << std::endl;
   }
 
