@@ -13,6 +13,7 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "truths_lies_config.pb.h"
 #include "truths_lies_generator_lib.h"
 
@@ -53,15 +54,89 @@ std::shared_ptr<StatementCollection> GenerateAllTruths(
   return collection;
 }
 
-int main(int argc, char** argv) {
-  absl::ParseCommandLine(argc, argv);
-
+absl::StatusOr<StatementCollection> GenerateTruthsLies(
+    const std::vector<std::shared_ptr<StatementGenerator>>&
+        statementGenerators,
+    int truths, int lies, int max_retries = 10, bool ensure_not_true = true) {
   std::vector<int> generatorWeights;
-  std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
+
+  for (auto const& generator : statementGenerators) {
+    generatorWeights.push_back(generator->size());
+  }
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::discrete_distribution<> dd(generatorWeights.begin(),
+                                 generatorWeights.end());
+  std::uniform_real_distribution<> ud(0.0, 1.0);
+
   std::vector<std::shared_ptr<StatementCollection>> truthsPerGenerator;
+
+  if (ensure_not_true) {
+    for (auto const& generator : statementGenerators) {
+      truthsPerGenerator.push_back(GenerateAllTruths(generator));
+    }
+  }
 
   StatementCollection statements;
 
+  for (int i = 0; i < truths; ++i) {
+    std::shared_ptr<Statement> s;
+    int retries_left = max_retries;
+    do {
+      int generatorIndex = dd(gen);
+      // generatorWeights represent the size of each valueMap vector
+      int valueMapIndex = static_cast<int>(
+          generatorWeights[generatorIndex] * ud(gen));
+      // if ensure_not_true, we already have the statements generatored
+      if (ensure_not_true) {
+        s = (*truthsPerGenerator[generatorIndex])[valueMapIndex];
+      } else {
+        s = std::make_shared<Statement>();
+        s->set_statement(
+            statementGenerators[generatorIndex]->truth(valueMapIndex));
+        s->set_truth(true);
+      }
+    } while (statements.count(s) > 0 && retries_left-- > 0);
+    if (retries_left <= 0) {
+      return absl::AlreadyExistsError(
+          "generated too many duplicate statements");
+    }
+    absl::Status status = statements.insert(s);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+
+  for (int i = 0; i < lies; ++i) {
+    int generatorIndex;
+    std::shared_ptr<Statement> s = std::make_shared<Statement>();
+    s->set_truth(false);
+    int retries_left = max_retries;
+    do {
+      generatorIndex = dd(gen);
+      // generatorWeights represent the size of each valueMap vector
+      int valueMapIndex = static_cast<int>(
+          generatorWeights[generatorIndex] * ud(gen));
+      s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
+    } while (
+        truthsPerGenerator[generatorIndex]->count(s) > 0 &&
+        statements.count(s) > 0 && retries_left-- > 0);
+    if (retries_left <= 0) {
+      return absl::AlreadyExistsError(
+          "generated too many duplicate statements");
+    }
+    absl::Status status = statements.insert(s);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+  return statements;
+}
+
+int main(int argc, char** argv) {
+  absl::ParseCommandLine(argc, argv);
+
+  std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
     TruthsLiesConfig config;
 
@@ -75,71 +150,20 @@ int main(int argc, char** argv) {
     parser.Parse(&data, &config);
     stream.close();
 
-    generatorWeights.push_back(config.arguments().size());
     statementGenerators.push_back(
         CreateStatementGenerator(std::move(config)));
-
-    truthsPerGenerator.push_back(
-        GenerateAllTruths(statementGenerators.back()));
   }
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::discrete_distribution<> dd(generatorWeights.begin(),
-                                 generatorWeights.end());
-  std::uniform_real_distribution<> ud(0.0, 1.0);
+  absl::StatusOr<StatementCollection> statusOrStatements = GenerateTruthsLies(
+      statementGenerators, absl::GetFlag(FLAGS_truths),
+      absl::GetFlag(FLAGS_lies), absl::GetFlag(FLAGS_max_retries),
+      absl::GetFlag(FLAGS_ensure_not_true));
 
-  for (int i = 0; i < absl::GetFlag(FLAGS_truths); ++i) {
-    std::shared_ptr<Statement> s;
-    int retries_left = absl::GetFlag(FLAGS_max_retries);
-    do {
-      int generatorIndex = dd(gen);
-      // generatorWeights represent the size of each valueMap vector
-      int valueMapIndex = static_cast<int>(
-          generatorWeights[generatorIndex] * ud(gen));
-      // if ensure_not_true, we already have the statements generatored
-      if (absl::GetFlag(FLAGS_ensure_not_true)) {
-        s = (*truthsPerGenerator[generatorIndex])[valueMapIndex];
-      } else {
-        s = std::make_shared<Statement>();
-        s->set_statement(
-            statementGenerators[generatorIndex]->truth(valueMapIndex));
-        s->set_truth(true);
-      }
-    } while (statements.count(s) > 0 && retries_left-- > 0);
-    if (retries_left <= 0) {
-      std::cerr
-          << "ERROR: generated too many duplicate statements"
-          << std::endl;
-      return EXIT_FAILURE;
-    }
-    absl::Status status = statements.insert(s);
-  }
-
-  for (int i = 0; i < absl::GetFlag(FLAGS_lies); ++i) {
-    int generatorIndex;
-    std::shared_ptr<Statement> s = std::make_shared<Statement>();
-    s->set_truth(false);
-    int retries_left = absl::GetFlag(FLAGS_max_retries);
-    do {
-      generatorIndex = dd(gen);
-      // generatorWeights represent the size of each valueMap vector
-      int valueMapIndex = static_cast<int>(
-          generatorWeights[generatorIndex] * ud(gen));
-      s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
-    } while (
-        truthsPerGenerator[generatorIndex]->count(s) > 0 &&
-        statements.count(s) > 0 && retries_left-- > 0);
-    if (retries_left <= 0) {
-      std::cerr
-          << "ERROR: generated too many duplicate statements"
-          << std::endl;
-      return EXIT_FAILURE;
-    }
-    absl::Status status = statements.insert(s);
-  }
+  StatementCollection statements = std::move(statusOrStatements.value());
 
   if (absl::GetFlag(FLAGS_random_order)) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::shuffle(statements.begin(), statements.end(), gen);
   } else {
     absl::Status status = statements.sort();
