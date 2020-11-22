@@ -119,6 +119,98 @@ int StatementCollection::count(std::shared_ptr<Statement> statement) const {
   return statementSet.count(statement);
 };
 
+std::shared_ptr<StatementCollection> GenerateAllTruths(
+    std::shared_ptr<const StatementGenerator> g) {
+  std::shared_ptr<StatementCollection> collection =
+      std::make_shared<StatementCollection>();
+  for (size_t i = 0; i < g->size(); ++i) {
+    std::shared_ptr<Statement> s = std::make_shared<Statement>();
+    s->set_statement(g->truth(i));
+    s->set_truth(true);
+    absl::Status status = collection->insert(s);
+  }
+  return collection;
+}
+
+absl::StatusOr<StatementCollection> GenerateTruthsLies(
+    const std::vector<std::shared_ptr<StatementGenerator>>&
+        statementGenerators,
+    int truths, int lies, int max_retries, bool ensure_not_true) {
+  std::vector<int> generatorWeights;
+
+  for (auto const& generator : statementGenerators) {
+    generatorWeights.push_back(generator->size());
+  }
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::discrete_distribution<> dd(generatorWeights.begin(),
+                                 generatorWeights.end());
+  std::uniform_real_distribution<> ud(0.0, 1.0);
+
+  std::vector<std::shared_ptr<StatementCollection>> truthsPerGenerator;
+
+  if (ensure_not_true) {
+    for (auto const& generator : statementGenerators) {
+      truthsPerGenerator.push_back(GenerateAllTruths(generator));
+    }
+  }
+
+  StatementCollection statements;
+
+  for (int i = 0; i < truths; ++i) {
+    std::shared_ptr<Statement> s;
+    int retries_left = max_retries;
+    do {
+      int generatorIndex = dd(gen);
+      // generatorWeights represent the size of each valueMap vector
+      int valueMapIndex = static_cast<int>(
+          generatorWeights[generatorIndex] * ud(gen));
+      // if ensure_not_true, we already have the statements generatored
+      if (ensure_not_true) {
+        s = (*truthsPerGenerator[generatorIndex])[valueMapIndex];
+      } else {
+        s = std::make_shared<Statement>();
+        s->set_statement(
+            statementGenerators[generatorIndex]->truth(valueMapIndex));
+        s->set_truth(true);
+      }
+    } while (statements.count(s) > 0 && retries_left-- > 0);
+    if (retries_left <= 0) {
+      return absl::AlreadyExistsError(
+          "generated too many duplicate statements");
+    }
+    absl::Status status = statements.insert(s);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+
+  for (int i = 0; i < lies; ++i) {
+    int generatorIndex;
+    std::shared_ptr<Statement> s = std::make_shared<Statement>();
+    s->set_truth(false);
+    int retries_left = max_retries;
+    do {
+      generatorIndex = dd(gen);
+      // generatorWeights represent the size of each valueMap vector
+      int valueMapIndex = static_cast<int>(
+          generatorWeights[generatorIndex] * ud(gen));
+      s->set_statement(statementGenerators[generatorIndex]->lie(valueMapIndex));
+    } while (
+        truthsPerGenerator[generatorIndex]->count(s) > 0 &&
+        statements.count(s) > 0 && retries_left-- > 0);
+    if (retries_left <= 0) {
+      return absl::AlreadyExistsError(
+          "generated too many duplicate statements");
+    }
+    absl::Status status = statements.insert(s);
+    if (!status.ok()) {
+      return status;
+    }
+  }
+  return statements;
+}
+
 };  // namespace truths_lies_generator
 };  // namespace everchanging
 

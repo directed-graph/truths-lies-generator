@@ -21,6 +21,7 @@ cc_library(
   deps = [
     ":truths_lies_config_cc_proto",
     "@com_google_absl//absl/status:status",
+    "@com_google_absl//absl/status:statusor",
     "@com_google_absl//absl/strings:strings",
   ],
 )

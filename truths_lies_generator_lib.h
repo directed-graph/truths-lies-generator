@@ -9,6 +9,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "truths_lies_config.pb.h"
 
 namespace everchanging {
@@ -78,6 +79,14 @@ private:
   std::set<std::shared_ptr<Statement>, SharedStatementCmp> truthsSet;
   std::vector<std::shared_ptr<Statement>> statementVector;
 };
+
+std::shared_ptr<StatementCollection> GenerateAllTruths(
+    std::shared_ptr<const StatementGenerator> g);
+
+absl::StatusOr<StatementCollection> GenerateTruthsLies(
+    const std::vector<std::shared_ptr<StatementGenerator>>&
+        statementGenerators,
+    int truths, int lies, int max_retries = 10, bool ensure_not_true = true);
 
 };  // namespace truths_lies_generator
 };  // namespace everchanging
