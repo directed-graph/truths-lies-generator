@@ -10,7 +10,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "truths_lies_config.pb.h"
+#include "truths_lies_generator.pb.h"
 
 namespace everchanging {
 namespace truths_lies_generator {

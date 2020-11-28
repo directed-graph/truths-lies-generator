@@ -7,7 +7,7 @@
 #include <google/protobuf/wrappers.pb.h>
 
 #include "absl/strings/str_cat.h"
-#include "truths_lies_config.pb.h"
+#include "truths_lies_generator.pb.h"
 #include "truths_lies_generator_lib.h"
 
 namespace everchanging {
