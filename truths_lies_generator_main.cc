@@ -14,8 +14,9 @@
 #include "absl/flags/parse.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "truths_lies_generator.pb.h"
+#include "truths_lies_generator.grpc.pb.h"
 #include "truths_lies_generator_lib.h"
+#include "truths_lies_generator.pb.h"
 
 ABSL_FLAG(bool, ensure_not_true, true,
           "ensure that generated lies statements are not true; "
@@ -32,6 +33,47 @@ ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
 
 namespace {
 using namespace everchanging::truths_lies_generator;
+};
+
+class TruthsLiesGeneratorServiceImpl
+    : public TruthsLiesGeneratorService::Service {
+public:
+  ::grpc::Status Generate(
+      ::grpc::ServerContext* context,
+      const GenerateRequest* request,
+      GenerateResponse* response) {
+    ::grpc::Status s = checkGenerateRequest(request);
+    if (!s.ok()) {
+      return s;
+    }
+    return ::grpc::Status::OK;
+  };
+  ::grpc::Status GeneratePartitioned(
+      ::grpc::ServerContext* context,
+      const GenerateRequest* request,
+      GeneratePartitionedResponse* response) {
+    ::grpc::Status s = checkGenerateRequest(request);
+    if (!s.ok()) {
+      return s;
+    }
+    return ::grpc::Status::OK;
+  };
+private:
+  ::grpc::Status checkGenerateRequest(const GenerateRequest* request) {
+    if (!request->has_config()) {
+      return ::grpc::Status(::grpc::INVALID_ARGUMENT,
+                            "TruthsLiesConfig not provided");
+    }
+    if (request->truths_count() < 0 || request->lies_count() < 0) {
+      return ::grpc::Status(::grpc::INVALID_ARGUMENT,
+                            "statement count cannot be negative");
+    }
+    if (request->truths_count() == 0 && request->lies_count() == 0) {
+      return ::grpc::Status(::grpc::INVALID_ARGUMENT,
+                            "truths and lies statements cannot both be zero");
+    }
+    return ::grpc::Status::OK;
+  };
 };
 
 int main(int argc, char** argv) {
