@@ -46,8 +46,19 @@ public:
     if (!s.ok()) {
       return s;
     }
+    auto statementGenerators = makeStatementGenerators(request);
+    absl::StatusOr<StatementCollection> statusOrStatements =
+        GenerateTruthsLies(
+            statementGenerators, request->truths_count(),
+            request->lies_count(), absl::GetFlag(FLAGS_max_retries),
+            absl::GetFlag(FLAGS_ensure_not_true));
+    // TODO: check status
+    for (std::shared_ptr<Statement> statement : statusOrStatements.value()) {
+      response->add_statements()->CopyFrom(*statement);
+    }
     return ::grpc::Status::OK;
   };
+
   ::grpc::Status GeneratePartitioned(
       ::grpc::ServerContext* context,
       const GenerateRequest* request,
@@ -56,11 +67,26 @@ public:
     if (!s.ok()) {
       return s;
     }
+    auto statementGenerators = makeStatementGenerators(request);
+    absl::StatusOr<StatementCollection> statusOrStatements =
+        GenerateTruthsLies(
+            statementGenerators, request->truths_count(),
+            request->lies_count(), absl::GetFlag(FLAGS_max_retries),
+            absl::GetFlag(FLAGS_ensure_not_true));
+    // TODO: check status
+    for (std::shared_ptr<Statement> statement : statusOrStatements.value()) {
+      if (statement->truth()) {
+        response->add_truths()->CopyFrom(*statement);
+      } else {
+        response->add_lies()->CopyFrom(*statement);
+      }
+    }
     return ::grpc::Status::OK;
   };
+
 private:
   ::grpc::Status checkGenerateRequest(const GenerateRequest* request) {
-    if (request->config_size() == 0) {
+    if (request->configs_size() == 0) {
       return ::grpc::Status(::grpc::INVALID_ARGUMENT,
                             "must provide at least one TruthsLiesConfig");
     }
@@ -73,6 +99,15 @@ private:
                             "truths and lies statements cannot both be zero");
     }
     return ::grpc::Status::OK;
+  };
+
+  std::vector<std::shared_ptr<StatementGenerator>> makeStatementGenerators(
+      const GenerateRequest* request) {
+    std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
+    for (auto const& config : request->configs()) {
+      statementGenerators.push_back(CreateStatementGenerator(config));
+    }
+    return statementGenerators;
   };
 };
 
