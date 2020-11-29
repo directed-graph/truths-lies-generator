@@ -60,9 +60,9 @@ public:
   };
 private:
   ::grpc::Status checkGenerateRequest(const GenerateRequest* request) {
-    if (!request->has_config()) {
+    if (request->config_size() == 0) {
       return ::grpc::Status(::grpc::INVALID_ARGUMENT,
-                            "TruthsLiesConfig not provided");
+                            "must provide at least one TruthsLiesConfig");
     }
     if (request->truths_count() < 0 || request->lies_count() < 0) {
       return ::grpc::Status(::grpc::INVALID_ARGUMENT,
