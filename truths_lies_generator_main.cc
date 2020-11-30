@@ -14,6 +14,10 @@
 #include "absl/flags/parse.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 #include "truths_lies_generator.grpc.pb.h"
 #include "truths_lies_generator_lib.h"
 #include "truths_lies_generator.pb.h"
@@ -25,9 +29,11 @@ ABSL_FLAG(bool, ensure_not_true, true,
 ABSL_FLAG(bool, random_order, false,
           "if set, randomize output order; "
           "if not set, output is sorted lexically");
+ABSL_FLAG(bool, server, false, "run as server");
 ABSL_FLAG(int, lies, 0, "number of lie statements");
 ABSL_FLAG(int, max_retries, 10,
           "number of times to retry if we generate identical statements");
+ABSL_FLAG(int, port, 50055, "the port to serve from if --server");
 ABSL_FLAG(int, truths, 0, "number of truth statements");
 ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
 
@@ -117,8 +123,29 @@ private:
   };
 };
 
+int RunServer() {
+  std::string address(absl::StrCat("localhost:", absl::GetFlag(FLAGS_port)));
+  TruthsLiesGeneratorServiceImpl service;
+
+  grpc::EnableDefaultHealthCheckService(true);
+  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+  grpc::ServerBuilder builder;
+  builder.AddListeningPort(address, grpc::InsecureServerCredentials());
+  builder.RegisterService(&service);
+  std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+
+  std::cout << "INFO: server listening on " << address << std::endl;
+
+  server->Wait();
+  return EXIT_SUCCESS;
+}
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
+
+  if (absl::GetFlag(FLAGS_server)) {
+    return RunServer();
+  }
 
   std::vector<std::shared_ptr<StatementGenerator>> statementGenerators;
   for (std::string& input_file : absl::GetFlag(FLAGS_input_files)) {
@@ -142,6 +169,7 @@ int main(int argc, char** argv) {
       statementGenerators, absl::GetFlag(FLAGS_truths),
       absl::GetFlag(FLAGS_lies), absl::GetFlag(FLAGS_max_retries),
       absl::GetFlag(FLAGS_ensure_not_true));
+  // TODO: check status
   StatementCollection statements = std::move(statusOrStatements.value());
 
   if (absl::GetFlag(FLAGS_random_order)) {

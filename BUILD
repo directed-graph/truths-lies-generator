@@ -40,6 +40,8 @@ cc_binary(
   deps = [
     ":truths_lies_generator_lib",
     ":truths_lies_generator_cc_grpc_proto",
+    "@com_github_grpc_grpc//:grpc++",
+    "@com_github_grpc_grpc//:grpc++_reflection",
     "@com_google_absl//absl/flags:flag",
     "@com_google_absl//absl/flags:parse",
     "@com_google_absl//absl/status:status",
