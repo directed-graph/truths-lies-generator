@@ -42,18 +42,12 @@ public:
       ::grpc::ServerContext* context,
       const GenerateRequest* request,
       GenerateResponse* response) {
-    ::grpc::Status s = checkGenerateRequest(request);
+    StatementCollection statements;
+    ::grpc::Status s = generateTruthsLies(request, statements);
     if (!s.ok()) {
       return s;
     }
-    auto statementGenerators = makeStatementGenerators(request);
-    absl::StatusOr<StatementCollection> statusOrStatements =
-        GenerateTruthsLies(
-            statementGenerators, request->truths_count(),
-            request->lies_count(), absl::GetFlag(FLAGS_max_retries),
-            absl::GetFlag(FLAGS_ensure_not_true));
-    // TODO: check status
-    for (std::shared_ptr<Statement> statement : statusOrStatements.value()) {
+    for (std::shared_ptr<Statement> statement : statements) {
       response->add_statements()->CopyFrom(*statement);
     }
     return ::grpc::Status::OK;
@@ -63,18 +57,12 @@ public:
       ::grpc::ServerContext* context,
       const GenerateRequest* request,
       GeneratePartitionedResponse* response) {
-    ::grpc::Status s = checkGenerateRequest(request);
+    StatementCollection statements;
+    ::grpc::Status s = generateTruthsLies(request, statements);
     if (!s.ok()) {
       return s;
     }
-    auto statementGenerators = makeStatementGenerators(request);
-    absl::StatusOr<StatementCollection> statusOrStatements =
-        GenerateTruthsLies(
-            statementGenerators, request->truths_count(),
-            request->lies_count(), absl::GetFlag(FLAGS_max_retries),
-            absl::GetFlag(FLAGS_ensure_not_true));
-    // TODO: check status
-    for (std::shared_ptr<Statement> statement : statusOrStatements.value()) {
+    for (std::shared_ptr<Statement> statement : statements) {
       if (statement->truth()) {
         response->add_truths()->CopyFrom(*statement);
       } else {
@@ -108,6 +96,24 @@ private:
       statementGenerators.push_back(CreateStatementGenerator(config));
     }
     return statementGenerators;
+  };
+  ::grpc::Status generateTruthsLies(
+      const GenerateRequest* request, StatementCollection& statements) {
+    ::grpc::Status s = checkGenerateRequest(request);
+    if (!s.ok()) {
+      return s;
+    }
+    absl::StatusOr<StatementCollection> statusOrStatements =
+        GenerateTruthsLies(
+            makeStatementGenerators(request), request->truths_count(),
+            request->lies_count(), absl::GetFlag(FLAGS_max_retries),
+            absl::GetFlag(FLAGS_ensure_not_true));
+    // TODO: check status
+    statements = std::move(statusOrStatements.value());
+    for (auto const& statement : statusOrStatements.value()) {
+      std::cout << statement << std::endl;
+    }
+    return ::grpc::Status::OK;
   };
 };
 
