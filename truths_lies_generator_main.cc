@@ -116,9 +116,6 @@ private:
             absl::GetFlag(FLAGS_ensure_not_true));
     // TODO: check status
     statements = std::move(statusOrStatements.value());
-    for (auto const& statement : statusOrStatements.value()) {
-      std::cout << statement << std::endl;
-    }
     return ::grpc::Status::OK;
   };
 };
