@@ -39,6 +39,12 @@ ABSL_FLAG(std::vector<std::string>, input_files, {}, "input data file");
 
 namespace {
 using namespace everchanging::truths_lies_generator;
+
+std::string ProtobufToString(const google::protobuf::Message* message) {
+  std::string output;
+  google::protobuf::TextFormat::PrintToString(*message, &output);
+  return output;
+};
 };
 
 class TruthsLiesGeneratorServiceImpl
@@ -105,6 +111,8 @@ private:
   };
   ::grpc::Status generateTruthsLies(
       const GenerateRequest* request, StatementCollection& statements) {
+    std::cout << "INFO: processing request: "
+        << ProtobufToString(request) << std::endl;
     ::grpc::Status s = checkGenerateRequest(request);
     if (!s.ok()) {
       return s;
