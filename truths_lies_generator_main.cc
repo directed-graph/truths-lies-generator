@@ -121,7 +121,7 @@ private:
 };
 
 int RunServer() {
-  std::string address(absl::StrCat("localhost:", absl::GetFlag(FLAGS_port)));
+  std::string address(absl::StrCat("[::]:", absl::GetFlag(FLAGS_port)));
   TruthsLiesGeneratorServiceImpl service;
 
   grpc::EnableDefaultHealthCheckService(true);
