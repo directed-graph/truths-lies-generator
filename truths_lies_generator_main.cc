@@ -59,6 +59,7 @@ public:
     if (!s.ok()) {
       return s;
     }
+    statements.sort();
     for (std::shared_ptr<Statement> statement : statements) {
       response->add_statements()->CopyFrom(*statement);
     }
