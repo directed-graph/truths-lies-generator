@@ -1,0 +1,22 @@
+{
+  "name": "truths-lies-generator-service",
+  "version": "1.0.0",
+  "description": "Generate truths and lies based on a set of truths.",
+  "dependencies": {
+    "google-protobuf": "^3.14.0",
+    "grpc-web": "^1.2.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.11.0",
+    "webpack-cli": "^4.2.0"
+  },
+  "scripts": {
+    "test": "npx webpack && python -m http.server 8081"
+  },
+  "author": {
+    "name": "Travis Chen",
+    "email": "travis.chen@everchanging.dev",
+    "url": "https://everchanging.dev"
+  },
+  "license": "MIT"
+}
