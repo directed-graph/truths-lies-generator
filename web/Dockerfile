@@ -1,19 +1,5 @@
 
-FROM node:12-stretch-slim
-
-RUN apt-get -qq update && apt-get -qq install -y curl unzip
-
-WORKDIR /tmp
-
-RUN curl -sSL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/\
-protoc-3.14.0-linux-x86_64.zip -o protoc.zip && \
-  unzip -qq protoc.zip && \
-  cp ./bin/protoc /usr/local/bin/protoc && \
-  cp -r ./include/* /usr/local/include
-
-RUN curl -sSL https://github.com/grpc/grpc-web/releases/download/1.2.1/\
-protoc-gen-grpc-web-1.2.1-linux-x86_64 -o /usr/local/bin/protoc-gen-grpc-web && \
-  chmod +x /usr/local/bin/protoc-gen-grpc-web
+FROM implementing/node-grpc-web
 
 WORKDIR /github/directed-graph/truths-lies-generator
 
