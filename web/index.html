@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Truths Lies Generator</title>
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="./dist/main.js"></script>
+  <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truths Lies Generator</title>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="./dist/main.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="row p-3 mb-2" id="input-row">
-      <div class="pl-3 pb-3">
+      <div class="col-md-3 pb-3">
         <input type="number" class="form-control" placeholder="Truths Count"
             id="truths-count" name="truthsCount"/>
       </div>
-      <div class="pl-3 pb-3">
+      <div class="col-md-3 pb-3">
         <input type="number" class="form-control" placeholder="Lies Count"
             id="lies-count" name="liesCount"/>
       </div>
-      <div class="pl-3 pb-3">
-        <button id="generate-btn" type="button" class="btn btn-primary">Generate</button>
+      <div class="col-md-2 pb-3">
+        <button id="generate-btn" type="button" class="btn btn-block btn-primary">Generate</button>
       </div>
-      <div class="pl-3 pb-3">
-        <button id="reveal-btn" type="button" class="btn btn-info">Reveal</button>
+      <div class="col-md-2 pb-3">
+        <button id="reveal-btn" type="button" class="btn btn-block btn-secondary">Reveal</button>
       </div>
-      <div class="pl-3 pb-3">
-        <button id="clear-btn" type="button" class="btn btn-info">Clear</button>
+      <div class="col-md-2 pb-3">
+        <button id="clear-btn" type="button" class="btn btn-block btn-secondary">Clear</button>
       </div>
     </div>
   </div>

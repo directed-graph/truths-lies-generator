@@ -46,7 +46,7 @@ truthsliesgeneratorapp.GeneratorApp.prototype.writeStatement =
     $('#input-row').after(
         $('<div/>').addClass('row').append(
             $('<div/>')
-                .addClass('p-3 mb-2 bg-secondary text-white')
+                .addClass('col p-3 mb-2 bg-secondary text-white')
                 .attr('data-truth', statement.getTruth())
                 .text(index + statement.getStatement())));
 };
