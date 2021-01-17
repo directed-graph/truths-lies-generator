@@ -46,7 +46,7 @@ truthsliesgeneratorapp.GeneratorApp.prototype.writeStatement =
     $('#input-row').after(
         $('<div/>').addClass('row').append(
             $('<div/>')
-                .addClass('col p-3 mb-2 bg-secondary text-white')
+                .addClass('col p-3 mb-2 bg-dark text-white')
                 .attr('data-truth', statement.getTruth())
                 .text(index + statement.getStatement())));
 };
@@ -54,9 +54,9 @@ truthsliesgeneratorapp.GeneratorApp.prototype.writeStatement =
 truthsliesgeneratorapp.GeneratorApp.prototype.revealTruth =
         function() {
     $('#input-row').nextAll('div.row').children().each(function() {
-        $(this).removeClass('bg-secondary');
+        $(this).removeClass('bg-dark');
         if ($(this).attr('data-truth') == "true") {
-            $(this).addClass('bg-primary');
+            $(this).addClass('bg-success');
         } else {
             $(this).addClass('bg-danger');
         }
