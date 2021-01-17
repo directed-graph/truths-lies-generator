@@ -8,10 +8,10 @@
   },
   "devDependencies": {
     "webpack": "^5.11.0",
-    "webpack-cli": "^4.2.0"
+    "webpack-cli": "^4.3.1"
   },
   "scripts": {
-    "test": "npx webpack && python -m http.server 8081"
+    "test": "npx webpack && npx http-server -p 8081"
   },
   "author": {
     "name": "Travis Chen",

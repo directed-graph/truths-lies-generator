@@ -1,7 +1,7 @@
 
-FROM node:12-stretch
+FROM node:12-stretch-slim
 
-RUN apt-get -qq update && apt-get -qq install -y unzip
+RUN apt-get -qq update && apt-get -qq install -y curl unzip
 
 WORKDIR /tmp
 
@@ -35,7 +35,6 @@ RUN npm install && \
 
 WORKDIR /var/www/html
 
-EXPOSE 8081
-ENTRYPOINT ["python3", "-m", "http.server"]
-CMD ["8081"]
+ENTRYPOINT ["npx", "http-server"]
+CMD ["-p", "8081"]
 
