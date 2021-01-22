@@ -12,7 +12,9 @@ COPY ./truths_lies_generator_lib.h .
 COPY ./truths_lies_generator_main.cc .
 COPY ./truths_lies_generator.proto .
 
-RUN bazel build :generator
+RUN bazel build :generator && \
+    cp bazel-bin/generator /usr/local/bin && \
+    bazel clean
 
-ENTRYPOINT ["bazel-bin/generator", "--server"]
+ENTRYPOINT ["generator", "--server"]
 
