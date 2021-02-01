@@ -7,6 +7,7 @@
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
   <script src="./dist/main.js"></script>
 </head>
 <body>
@@ -16,7 +17,7 @@
         <h1>Truths Lies Generator</h1>
       </div>
       <div class="col-sm-3 pb-3 text-sm-right">
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#data-modal">Configure</button>
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#data-modal" id="configure-btn">Configure</button>
       </div>
     </div>
     <div class="row p-1 mb-2" id="input-row">
@@ -51,16 +52,19 @@
           </button>
         </div>
         <div class="modal-body">
-  		<form>
+          <p>
+            Provide data via gSheets. The gSheet should be publicly accessible,
+            and the first row should be the headers.
+          </p>
+          <form>
             <div class="form-group">
               <label for="spreadsheet-id" class="col-form-label">Spreadsheet ID</label>
               <input type="text" class="form-control" id="spreadsheet-id" />
             </div>
-            <div class="form-group">
-              <label for="data-range" class="col-form-label">Data Range</label>
-              <input type="text" class="form-control" id="data-range" />
-            </div>
           </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
