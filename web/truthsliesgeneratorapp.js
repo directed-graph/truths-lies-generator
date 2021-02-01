@@ -1,21 +1,26 @@
 const truthsliesgeneratorapp = {};
 
-truthsliesgeneratorapp.GeneratorApp = function(generatorService, ctors, data) {
+truthsliesgeneratorapp.GeneratorApp = function(generatorService, ctors, getData) {
     this.generatorService = generatorService;
     this.ctors = ctors;
-    this.data = data;
+    this.getData = getData;
 };
 
 truthsliesgeneratorapp.GeneratorApp.prototype.generate =
-        function(truthsCount = 1, liesCount = 0) {
+        async function(truthsCount = 1, liesCount = 0) {
+    let sheetId = $('#spreadsheet-id').val();
+    if (!sheetId) {
+        return $('#configure-btn').click();
+    }
+    let data = await this.getData(sheetId, '1:1000');
+
     let request = new this.ctors.GenerateRequest();
     request.setTruthsCount(truthsCount);
     request.setLiesCount(liesCount);
     let config = request.addConfigs();
-    config.setTemplateString(
-            'On {date}, I solved the 3x3x3 Rubik\'s Cube in exactly {time}.');
-    config.setClassName('CubingStatementGenerator');
-    this.data.forEach(function(entry) {
+    config.setTemplateString(data[0].template_string);
+    config.setClassName(data[0].class_name);
+    data.forEach(function(entry) {
         let argument = config.addArguments();
         let dateValue = new this.ctors.ValueMap.Value();
         dateValue.setStringValue(entry.date);
