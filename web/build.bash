@@ -13,8 +13,14 @@ fi
 
 docker build -t "${image_name}" -f web/Dockerfile .
 docker create -ti --name "${temp_name}" "${image_name}" bash
-docker cp "${temp_name}:/var/www/html" .
+
+git checkout pages
+
+docker cp "${temp_name}:/var/www/html/" .
 docker rm -f "${temp_name}"
 
+# indeed, because we run client-side, it is possible to get the key
 sed -i "s/<API_KEY>/${api_key}/" html/dist/main.js
+
+git checkout master
 
