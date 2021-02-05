@@ -7,7 +7,7 @@ const {GeneratorApp} = require('./truthsliesgeneratorapp.js');
 
 const endpoint = 'https://endpoint.truths-lies-generator.everchanging.app';
 
-const gSheetsApiKey = 'API_KEY';
+const gSheetsApiKey = '<API_KEY>';
 const gSheetsApiUrl = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
 
 gapi.load('client', function() {
