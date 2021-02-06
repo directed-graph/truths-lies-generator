@@ -76,6 +76,12 @@ truthsliesgeneratorapp.GeneratorApp.prototype.clear =
 truthsliesgeneratorapp.GeneratorApp.prototype.load = function() {
     var that = this;
     $(document).ready(function() {
+        if (typeof(Storage) !== 'undefined') {
+            $('#spreadsheet-id').val(localStorage.getItem('spreadsheet-id'));
+            $('#save-btn').bind('click', () =>
+                localStorage.setItem('spreadsheet-id',
+                                     $('#spreadsheet-id').val()));
+        }
         $('#generate-btn').bind('click', function(e) {
             that.generate(
                 parseInt($('#truths-count').val()) || 0,
