@@ -12,7 +12,19 @@ truthsliesgeneratorapp.GeneratorApp.prototype.generate =
     if (!sheetId) {
         return $('#configure-btn').click();
     }
-    let data = await this.getData(sheetId, '1:1000');
+
+    let data;
+    try {
+        data = await this.getData(sheetId, '1:1000');
+    } catch(err) {
+        let message = 'Failed to access.';
+        if (typeof(err.result.error.message) !== 'undefined') {
+            message = err.result.error.message;
+        }
+        $('#spreadsheet-id').val(
+            message + ' (' + $('#spreadsheet-id').val() + ')');
+        return $('#configure-btn').click();
+    }
 
     let request = new this.ctors.GenerateRequest();
     request.setTruthsCount(truthsCount);

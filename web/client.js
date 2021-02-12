@@ -19,24 +19,19 @@ gapi.load('client', function() {
 
 gSheetData = async function(sheetId, range) {
     let data = new Array();
-    try {
-        let rawData = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: sheetId,
-            range: range,
-        });
-        let headers = rawData.result.values[0];
-        for (let i = 1; i < rawData.result.values.length; ++i) {
-            let dataPoint = {};
-            for (let j = 0; j < headers.length; ++j) {
-                dataPoint[headers[j]] = rawData.result.values[i][j];
-            }
-            data.push(dataPoint);
+    let rawData = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: range,
+    });
+    let headers = rawData.result.values[0];
+    for (let i = 1; i < rawData.result.values.length; ++i) {
+        let dataPoint = {};
+        for (let j = 0; j < headers.length; ++j) {
+            dataPoint[headers[j]] = rawData.result.values[i][j];
         }
-    } catch(err) {
-        console.error('Error getting data', err);
-    } finally {
-        return data;
+        data.push(dataPoint);
     }
+    return data;
 };
 
 let generatorService = new TruthsLiesGeneratorServiceClient(endpoint);
